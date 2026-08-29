@@ -220,3 +220,8 @@ All configuration is environment-driven; nothing is hardcoded. Copy
 Without an API key the assistant falls back to a deterministic responder that
 handles the same questions with the same guardrails, so the demo works with no
 external dependency.
+
+## Deployment
+
+Frontend on Vercel, API and Postgres on Render. See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

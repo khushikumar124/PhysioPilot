@@ -8,8 +8,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 # Configure the app before it is imported anywhere.
+# Defaults to a throwaway SQLite file. Set PHYSIOPILOT_TEST_DATABASE_URL to run
+# the same suite against Postgres, which is what deployment actually uses.
 _TMP_DB = os.path.join(tempfile.mkdtemp(), "test.db")
-os.environ["PHYSIOPILOT_DATABASE_URL"] = f"sqlite:///{_TMP_DB}"
+os.environ["PHYSIOPILOT_DATABASE_URL"] = os.environ.get(
+    "PHYSIOPILOT_TEST_DATABASE_URL", f"sqlite:///{_TMP_DB}"
+)
 os.environ["PHYSIOPILOT_SECRET_KEY"] = "test-secret"
 os.environ["PHYSIOPILOT_ANTHROPIC_API_KEY"] = ""
 

@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .database import Base, SessionLocal, engine, ensure_schema
 from .routers import auth, exercises, me, patients, plans, sessions
-from .seed import ensure_catalogue
+from .seed import ensure_catalogue, seed_demo
 
 logger = logging.getLogger("physiopilot")
 settings = get_settings()
@@ -28,6 +28,16 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     ensure_schema()
     with SessionLocal() as db:
         ensure_catalogue(db)
+        if settings.seed_demo_on_startup:
+            # seed_demo is a no-op once the demo clinic exists, so this is safe
+            # to leave switched on across redeploys.
+            from sqlalchemy import select
+
+            from .models import User
+
+            if db.scalar(select(User).limit(1)) is None:
+                logger.info("Empty database with seeding enabled: creating demo clinic")
+                seed_demo(db)
     yield
 
 

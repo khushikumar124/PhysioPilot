@@ -29,6 +29,17 @@ import type {
 
 const TOKEN_KEY = "physiopilot.token";
 
+/**
+ * Where the API lives.
+ *
+ * In development this is empty, so requests stay relative and Vite's proxy
+ * forwards them - which keeps the browser on one origin and the camera on a
+ * secure context. In production the frontend and API are on different hosts,
+ * so VITE_API_BASE_URL points at the deployed API and that origin must appear
+ * in the API's PHYSIOPILOT_CORS_ORIGINS.
+ */
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -61,7 +72,7 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
   const token = getToken();
   let response: Response;
   try {
-    response = await fetch(path, {
+    response = await fetch(`${API_BASE}${path}`, {
       method,
       headers: {
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),

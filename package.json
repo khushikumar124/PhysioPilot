@@ -1,0 +1,9 @@
+{
+  "name": "physiopilot",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "dev": "./scripts/dev.sh",
+    "test": "./scripts/test.sh"
+  }
+}

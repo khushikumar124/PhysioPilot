@@ -9,11 +9,17 @@ from .config import get_settings
 
 settings = get_settings()
 
-_connect_args = (
-    {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
-)
+_is_sqlite = settings.database_url.startswith("sqlite")
 
-engine = create_engine(settings.database_url, connect_args=_connect_args, future=True)
+_connect_args = {"check_same_thread": False} if _is_sqlite else {}
+
+# A hosted database drops idle connections; pre-ping so a stale one is replaced
+# rather than surfacing as an error on the first request after a quiet spell.
+_engine_kwargs = {} if _is_sqlite else {"pool_pre_ping": True, "pool_recycle": 300}
+
+engine = create_engine(
+    settings.sqlalchemy_url, connect_args=_connect_args, future=True, **_engine_kwargs
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
 
