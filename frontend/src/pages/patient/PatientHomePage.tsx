@@ -1,13 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
-import { useAuth } from "../../auth/AuthContext";
 import { useAsync } from "../../lib/useAsync";
 import { firstName, greeting } from "../../lib/format";
 import { Alert, EmptyState } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { FullPageSpinner } from "../../components/ui/Spinner";
-import { ThemeToggle } from "../../components/ui/ThemeToggle";
 import { EmptyRoutine } from "../../components/art/Illustrations";
 
 /**
@@ -22,7 +20,6 @@ import { EmptyRoutine } from "../../components/art/Illustrations";
  * it counts sessions, not performance.
  */
 export function PatientHomePage() {
-  const { signOut } = useAuth();
   const navigate = useNavigate();
   const routine = useAsync(() => api.routine(), []);
 
@@ -46,16 +43,13 @@ export function PatientHomePage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-[1.75rem] font-semibold leading-tight text-text">
-            {greeting()}, {firstName(routine.data.patient_name)}
-          </h1>
-          {routine.data.plan_title && (
-            <p className="mt-1 text-muted">{routine.data.plan_title}</p>
-          )}
-        </div>
-        <ThemeToggle size="lg" />
+      <header>
+        <h1 className="text-[1.75rem] font-semibold leading-tight text-text">
+          {greeting()}, {firstName(routine.data.patient_name)}
+        </h1>
+        {routine.data.plan_title && (
+          <p className="mt-1 text-muted">{routine.data.plan_title}</p>
+        )}
       </header>
 
       {items.length === 0 ? (
@@ -157,24 +151,13 @@ export function PatientHomePage() {
         </>
       )}
 
-      <div className="flex flex-col gap-3 pt-1">
+      <div className="pt-1">
         <Link to="/help">
           <Button variant="secondary" size="lg" className="w-full">
             <Icon name="assistant" size="1.1rem" />
             Ask a question
           </Button>
         </Link>
-        <Button
-          variant="ghost"
-          size="lg"
-          className="w-full"
-          onClick={() => {
-            signOut();
-            navigate("/login", { replace: true });
-          }}
-        >
-          Sign out
-        </Button>
       </div>
     </div>
   );
