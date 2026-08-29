@@ -15,6 +15,7 @@ const MODEL_PATH = "/mediapipe/models/pose_landmarker_lite.task";
 
 export type CameraErrorKind =
   | "permission_denied"
+  | "camera_busy"
   | "no_camera"
   | "insecure_context"
   | "model_failed"
@@ -31,7 +32,13 @@ export class CameraError extends Error {
 
 export const CAMERA_ERROR_MESSAGES: Record<CameraErrorKind, string> = {
   permission_denied:
-    "The camera is blocked. Please allow camera access in your browser, then try again.",
+    "The camera is blocked. Allow camera access for this site, then try again. " +
+    "On a phone or laptop you may also need to allow the camera for your browser " +
+    "in the device's own privacy settings.",
+  // NotReadableError is common in practice: a video call or camera app is
+  // still holding the device. Saying so saves the patient a lot of guessing.
+  camera_busy:
+    "Another app seems to be using the camera. Close it, then try again.",
   no_camera: "No camera was found on this device.",
   insecure_context:
     "The camera needs a secure connection. Open the app over https or on localhost.",
@@ -111,6 +118,9 @@ export async function startPoseTracking(
     const name = (error as DOMException)?.name;
     if (name === "NotAllowedError" || name === "SecurityError") {
       throw new CameraError("permission_denied", CAMERA_ERROR_MESSAGES.permission_denied);
+    }
+    if (name === "NotReadableError" || name === "AbortError") {
+      throw new CameraError("camera_busy", CAMERA_ERROR_MESSAGES.camera_busy);
     }
     if (name === "NotFoundError" || name === "OverconstrainedError") {
       throw new CameraError("no_camera", CAMERA_ERROR_MESSAGES.no_camera);
