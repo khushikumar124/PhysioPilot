@@ -40,6 +40,18 @@ Open <http://localhost:5173>.
 
 The login screen has buttons that fill these in.
 
+**There are two different apps behind one login.** Which one you get is decided
+by the account you sign in with — there is no role switcher, because a real
+patient must never be one tap away from the clinician dashboard.
+
+- Sign in as **Dr. Ananya Rao** → the clinician dashboard at `/clinic`.
+- Sign in as **Rahul Kumar** (or any patient) → the patient app at `/today`.
+
+To move between them, sign out and sign in as the other account. The clinician
+sign-out is at the top right; the patient sign-out is at the bottom of the
+Today screen. For a live demo it is easiest to keep two browser profiles, or
+one normal and one private window, signed in as each.
+
 ### Manual setup
 
 <details>

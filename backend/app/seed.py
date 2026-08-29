@@ -305,10 +305,24 @@ def seed_demo(db: Session, *, reset: bool = False) -> None:
         start_peak: dict[str, float],
         daily_gain: dict[str, float],
         consistency: float,
+        skip_today: bool = False,
+        seed: int = 0,
     ) -> None:
+        """Generate past sessions.
+
+        `skip_today` leaves the current day empty so that patient opens the app
+        with their routine still to do. Without it the walkthrough patient sees
+        a "finished for today" screen and there is no START button to press.
+        """
+        # Each patient draws from their own stream, so tuning one patient's
+        # story does not silently change everybody else's numbers.
+        rng = random.Random(seed)
+
         for day_offset in range(days, 0, -1):
             day = today - timedelta(days=day_offset - 1)
             if day < plan.start_date:
+                continue
+            if skip_today and day == today:
                 continue
             for pe in plan.prescribed_exercises:
                 for occurrence in range(pe.frequency_per_day):
@@ -327,18 +341,24 @@ def seed_demo(db: Session, *, reset: bool = False) -> None:
         start_peak={"heel_slide": 62, "straight_leg_raise": 34, "knee_flexion": 71},
         daily_gain={"heel_slide": 0.85, "straight_leg_raise": 0.55, "knee_flexion": 1.15},
         consistency=0.70,
+        # Rahul is the walkthrough patient: today must still be open for him.
+        skip_today=True,
+        seed=101,
     )
     history(
         priya, priya_plan, days=14, completion_rate=0.5,
         start_peak={"knee_flexion": 96, "sit_to_stand": 0},
         daily_gain={"knee_flexion": -1.1},
         consistency=0.5,
+        seed=202,
     )
     history(
         suresh, suresh_plan, days=6, completion_rate=0.8,
         start_peak={"heel_slide": 48, "straight_leg_raise": 26},
         daily_gain={"heel_slide": 1.4, "straight_leg_raise": 0.9},
         consistency=0.62,
+        skip_today=True,
+        seed=303,
     )
 
     db.commit()
