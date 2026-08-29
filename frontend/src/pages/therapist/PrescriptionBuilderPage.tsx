@@ -8,6 +8,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Panel, PanelBody, PanelHeader } from "../../components/ui/Card";
 import { SelectField, TextAreaField, TextField } from "../../components/ui/Field";
+import { Icon } from "../../components/ui/Icon";
 import { FullPageSpinner } from "../../components/ui/Spinner";
 
 interface DraftItem extends PrescribedExerciseInput {
@@ -57,6 +58,15 @@ export function PrescriptionBuilderPage() {
     [plans.data],
   );
 
+  // Writing a new exercise inline, so the clinician never loses the plan they
+  // are part-way through composing.
+  const [writingCustom, setWritingCustom] = useState(false);
+  const [customName, setCustomName] = useState("");
+  const [customCue, setCustomCue] = useState("");
+  const [customRegion, setCustomRegion] = useState("");
+  const [customError, setCustomError] = useState<string | null>(null);
+  const [creatingCustom, setCreatingCustom] = useState(false);
+
   const [title, setTitle] = useState("");
   const [condition, setCondition] = useState("");
   const [startDate, setStartDate] = useState(todayISO());
@@ -88,6 +98,45 @@ export function PrescriptionBuilderPage() {
     () => catalogue.data?.filter((e) => !items.some((item) => item.exercise_id === e.id)) ?? [],
     [catalogue.data, items],
   );
+
+  async function createCustomExercise(event: FormEvent) {
+    event.preventDefault();
+    setCustomError(null);
+    if (!customName.trim() || !customCue.trim()) {
+      setCustomError("A name and an instruction for the patient are both needed.");
+      return;
+    }
+    setCreatingCustom(true);
+    try {
+      const created = await api.createExercise({
+        name: customName.trim(),
+        patient_cue: customCue.trim(),
+        body_region: customRegion.trim() || "other",
+      });
+      catalogue.reload();
+      // Put it straight into the plan being written - that is why it was added.
+      setItems((current) => [
+        ...current,
+        {
+          key: `new-${created.id}-${Date.now()}`,
+          exercise_id: created.id,
+          sets: 3,
+          repetitions: 10,
+          frequency_per_day: 1,
+          instructions: created.patient_cue,
+          target_rom: null,
+        },
+      ]);
+      setCustomName("");
+      setCustomCue("");
+      setCustomRegion("");
+      setWritingCustom(false);
+    } catch (error) {
+      setCustomError(error instanceof Error ? error.message : "Could not add the exercise.");
+    } finally {
+      setCreatingCustom(false);
+    }
+  }
 
   function addExercise(exerciseId: number) {
     const exercise = exercisesById.get(exerciseId);
@@ -325,12 +374,94 @@ export function PrescriptionBuilderPage() {
                     onClick={() => addExercise(exercise.id)}
                   >
                     + {exercise.name}
-                    {exercise.cv_supported && (
+                    {exercise.cv_supported ? (
                       <span className="text-xs text-accent">· tracked</span>
-                    )}
+                    ) : exercise.is_custom ? (
+                      <span className="text-xs text-subtle">· yours</span>
+                    ) : null}
                   </Button>
                 ))}
+                {!writingCustom && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="border-dashed"
+                    onClick={() => setWritingCustom(true)}
+                  >
+                    <Icon name="plus" size="0.9rem" />
+                    Write your own
+                  </Button>
+                )}
               </div>
+
+              {writingCustom && (
+                <div className="mt-3 rounded-card border border-line bg-surface p-4">
+                  <p className="text-sm font-medium text-text">Write your own exercise</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Yours alone - it is added to your list, not to other clinicians'.
+                    The camera cannot track an exercise it has no movement model
+                    for, so the patient will mark this one as done themselves.
+                  </p>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <TextField
+                      label="Exercise name"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      placeholder="Ankle pumps"
+                      maxLength={120}
+                    />
+                    <TextField
+                      label="Body area"
+                      value={customRegion}
+                      onChange={(e) => setCustomRegion(e.target.value)}
+                      placeholder="ankle"
+                      hint="Optional"
+                      maxLength={40}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <TextAreaField
+                      label="What the patient should do"
+                      value={customCue}
+                      onChange={(e) => setCustomCue(e.target.value)}
+                      placeholder="Point your toes away from you, then pull them back towards you. Move slowly."
+                      hint="Written in plain language - the patient reads and hears exactly this."
+                      rows={3}
+                      maxLength={500}
+                    />
+                  </div>
+
+                  {customError && (
+                    <p role="alert" className="mt-2 text-xs text-alert">
+                      {customError}
+                    </p>
+                  )}
+
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      loading={creatingCustom}
+                      onClick={createCustomExercise}
+                    >
+                      Add to plan
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setWritingCustom(false);
+                        setCustomError(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </PanelBody>

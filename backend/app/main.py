@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import get_settings
-from .database import Base, SessionLocal, engine
+from .database import Base, SessionLocal, engine, ensure_schema
 from .routers import auth, exercises, me, patients, plans, sessions
 from .seed import ensure_catalogue
 
@@ -25,6 +25,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             "Set it before running anywhere other than your own machine."
         )
     Base.metadata.create_all(bind=engine)
+    ensure_schema()
     with SessionLocal() as db:
         ensure_catalogue(db)
     yield

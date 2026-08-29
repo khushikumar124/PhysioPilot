@@ -10,6 +10,7 @@ import { checkFraming, type FramingResult } from "../../cv/framing";
 import { drawPose } from "../../cv/overlay";
 import { CameraError, startPoseTracking, type PoseTrackerHandles } from "../../cv/poseTracker";
 import { PositioningGuide, SessionDone } from "../../components/art/Illustrations";
+import { ExerciseDemo, hasDemo } from "../../components/art/ExerciseDemo";
 import { Icon } from "../../components/ui/Icon";
 import { RepDetector, type DetectedRep } from "../../cv/repDetector";
 import { getTracker } from "../../cv/trackers";
@@ -269,6 +270,18 @@ export function ExerciseSessionPage() {
                 {item.sets} sets × {item.repetitions} times
               </p>
             </div>
+
+            {/* Watch it once before doing it. Only the built-in exercises have
+                a demonstration; a therapist's own written exercise shows its
+                instructions alone rather than a generic animation. */}
+            {hasDemo(item.exercise.slug) && (
+              <figure className="rounded-card-lg border border-line bg-surface px-4 py-5">
+                <figcaption className="mb-1 text-center text-base text-muted">
+                  This is the movement
+                </figcaption>
+                <ExerciseDemo slug={item.exercise.slug} className="mx-auto max-w-[19rem]" />
+              </figure>
+            )}
 
             <div className="border-y border-line py-5">
               <h2 className="text-xl font-semibold text-text">Let's get ready</h2>

@@ -33,6 +33,8 @@ export interface Exercise {
   tracker_key: string | null;
   primary_metric: string | null;
   default_target_rom: number | null;
+  /** True when a therapist wrote this exercise rather than it shipping built in. */
+  is_custom: boolean;
 }
 
 export interface Patient {

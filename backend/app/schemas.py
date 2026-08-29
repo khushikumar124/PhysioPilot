@@ -65,6 +65,23 @@ class ExerciseOut(ORMModel):
     tracker_key: str | None
     primary_metric: str | None
     default_target_rom: float | None
+    is_custom: bool = False
+
+
+class ExerciseCreate(BaseModel):
+    """A therapist writing their own exercise.
+
+    Deliberately narrow: the clinician supplies the words, and nothing here can
+    claim camera tracking. Tracking needs a movement model on the client, so a
+    written exercise is always self-reported and the API decides that, not the
+    caller.
+    """
+
+    name: str = Field(min_length=2, max_length=120)
+    patient_cue: str = Field(min_length=3, max_length=500)
+    description: str = Field(default="", max_length=1000)
+    body_region: str = Field(default="other", max_length=40)
+    difficulty: str = Field(default="easy", pattern="^(easy|moderate|hard)$")
 
 
 # --------------------------------------------------------------------------

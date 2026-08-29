@@ -111,6 +111,11 @@ class Exercise(Base):
 
     `cv_supported` is the honest switch: only exercises with a real tracker
     implementation are tracked by camera. Everything else is self-reported.
+
+    Two kinds of row live here. Built-in exercises ship with the product and
+    have `created_by_therapist_id` null, so every clinician sees them. A
+    therapist can also write their own; those stay private to the clinician who
+    created them, because one clinic's shorthand is not a shared catalogue.
     """
 
     __tablename__ = "exercises"
@@ -130,6 +135,14 @@ class Exercise(Base):
     primary_metric: Mapped[str | None] = mapped_column(String(40))
     # Default ROM target in degrees for a repetition to count as "full range".
     default_target_rom: Mapped[float | None] = mapped_column(Float)
+    # Null for built-in exercises; set for a clinician's own additions.
+    created_by_therapist_id: Mapped[int | None] = mapped_column(
+        ForeignKey("physiotherapist_profiles.id"), index=True
+    )
+
+    @property
+    def is_custom(self) -> bool:
+        return self.created_by_therapist_id is not None
 
 
 class RehabilitationPlan(Base):

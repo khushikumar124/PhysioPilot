@@ -119,6 +119,13 @@ export const api = {
 
   // --- catalogue ----------------------------------------------------------
   exercises: () => request<Exercise[]>("GET", "/api/exercises"),
+  createExercise: (payload: {
+    name: string;
+    patient_cue: string;
+    description?: string;
+    body_region?: string;
+    difficulty?: string;
+  }) => request<Exercise>("POST", "/api/exercises", payload),
 
   // --- therapist ----------------------------------------------------------
   overview: () => request<TherapistOverview>("GET", "/api/patients/overview"),

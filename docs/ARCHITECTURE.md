@@ -338,3 +338,37 @@ accounts, notifications, offline support, and any microservice decomposition.
    prescribe most.
 5. **Hindi and Tamil**, voice first — for the target patient population this
    matters more than any additional feature.
+
+## Therapist-authored exercises
+
+The built-in catalogue is deliberately small, so a clinician can write their own
+exercise from the prescription builder. Those rows live in the same `exercises`
+table, distinguished by `created_by_therapist_id`:
+
+* **null** - built in, visible to every clinician.
+* **set** - written by that clinician, visible only to them. One clinic's
+  shorthand is not a shared catalogue, and a global free-text list would become
+  unusable across tenants.
+
+A written exercise is always `cv_supported = false`, and the API sets that
+itself rather than trusting the request. Camera tracking needs a movement model
+(joint selection, angle definition, repetition thresholds) that only exists for
+the built-in exercises; a name and a sentence cannot produce one. The patient
+app therefore records these as self-reported: adherence is real, and quality is
+left null rather than invented. Both sides say so in plain language.
+
+Extending tracking to a new exercise is a code change - a tracker in
+`frontend/src/cv/trackers.ts` plus a catalogue entry - not something a user can
+configure into existence.
+
+## Movement demonstrations
+
+Each built-in exercise has a four-second looping SVG animation, shown on the
+get-ready screen before the camera opens. Written instructions are hard work
+for someone who is unsure, in pain, or not reading in their first language.
+
+They are drawn rather than filmed: a few kilobytes instead of a video file,
+theme-aware, and scalable. `prefers-reduced-motion` holds the mid-movement pose
+instead of animating. Therapist-authored exercises have no demonstration, and
+the screen omits it rather than showing a generic animation of the wrong
+movement.
