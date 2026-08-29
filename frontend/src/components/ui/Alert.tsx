@@ -1,15 +1,20 @@
 import type { ReactNode } from "react";
+import { Icon, type IconName } from "./Icon";
 
 type Tone = "info" | "success" | "warning" | "error";
 
-const TONES: Record<Tone, string> = {
-  info: "border-brand-200 bg-brand-50 text-brand-900",
-  success:
-    "border-[color:var(--color-positive)]/30 bg-[color:var(--color-positive-soft)] text-[color:var(--color-positive)]",
-  warning:
-    "border-[color:var(--color-caution)]/30 bg-[color:var(--color-caution-soft)] text-[color:var(--color-caution)]",
-  error:
-    "border-[color:var(--color-alert)]/30 bg-[color:var(--color-alert-soft)] text-[color:var(--color-alert)]",
+const TONES: Record<Tone, { box: string; icon: IconName }> = {
+  info: { box: "border-accent-line bg-accent-quiet text-text", icon: "info" },
+  success: { box: "border-positive bg-positive-quiet text-text", icon: "check" },
+  warning: { box: "border-caution bg-caution-quiet text-text", icon: "alert" },
+  error: { box: "border-alert bg-alert-quiet text-text", icon: "alert" },
+};
+
+const ICON_TINT: Record<Tone, string> = {
+  info: "text-accent",
+  success: "text-positive",
+  warning: "text-caution",
+  error: "text-alert",
 };
 
 export function Alert({
@@ -24,10 +29,13 @@ export function Alert({
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={`rounded-xl border px-4 py-3 text-sm ${TONES[tone]}`}
+      className={`flex gap-2.5 rounded-card border px-4 py-3 text-sm ${TONES[tone].box}`}
     >
-      {title && <p className="font-semibold">{title}</p>}
-      <div className={title ? "mt-0.5" : ""}>{children}</div>
+      <Icon name={TONES[tone].icon} className={`mt-0.5 ${ICON_TINT[tone]}`} />
+      <div className="min-w-0">
+        {title && <p className="font-semibold">{title}</p>}
+        <div className={title ? "mt-0.5 text-muted" : ""}>{children}</div>
+      </div>
     </div>
   );
 }
@@ -36,16 +44,20 @@ export function EmptyState({
   title,
   description,
   action,
+  art,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** An illustration carries an empty state far better than a dashed box. */
+  art?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-ink-300 px-6 py-10 text-center">
-      <p className="font-medium text-ink-700">{title}</p>
-      {description && <p className="max-w-md text-sm text-ink-500">{description}</p>}
-      {action && <div className="mt-2">{action}</div>}
+    <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+      {art && <div className="mb-2 text-subtle">{art}</div>}
+      <p className="font-medium text-text">{title}</p>
+      {description && <p className="max-w-md text-sm text-muted">{description}</p>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }

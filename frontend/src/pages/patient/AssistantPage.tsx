@@ -3,6 +3,7 @@ import { api } from "../../api/client";
 import type { AssistantTurn } from "../../api/types";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
+import { Icon } from "../../components/ui/Icon";
 
 interface Message {
   role: "patient" | "assistant";
@@ -73,25 +74,28 @@ export function AssistantPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-3xl font-semibold text-ink-900">Ask a question</h1>
-        <p className="mt-1 text-ink-600">
+        <h1 className="text-3xl font-semibold text-text">Ask a question</h1>
+        <p className="mt-1 text-muted">
           I can explain the exercises your physiotherapist gave you.
         </p>
       </header>
 
+      {/* The suggestions are the buttons themselves - wrapping them in a panel
+          would put a bordered box inside a bordered box for no gain. */}
       {messages.length === 0 && (
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
-          <p className="text-ink-700">Try one of these:</p>
-          <div className="mt-3 flex flex-col gap-2">
+        <div>
+          <p className="text-muted">Try one of these:</p>
+          <div className="mt-3 flex flex-col gap-2.5">
             {SUGGESTIONS.map((suggestion) => (
               <Button
                 key={suggestion}
                 variant="secondary"
                 size="lg"
-                className="justify-start text-left"
+                className="justify-between text-left"
                 onClick={() => void send(suggestion)}
               >
                 {suggestion}
+                <Icon name="chevron-right" size="1rem" className="text-subtle" />
               </Button>
             ))}
           </div>
@@ -104,20 +108,20 @@ export function AssistantPage() {
             key={`${index}-${message.text.slice(0, 12)}`}
             className={`max-w-[90%] rounded-2xl px-4 py-3 text-lg ${
               message.role === "patient"
-                ? "ml-auto bg-brand-700 text-white"
-                : "border border-ink-200 bg-white text-ink-800"
+                ? "ml-auto bg-accent text-accent-text"
+                : "border border-line bg-surface text-text"
             }`}
           >
             {message.text}
           </div>
         ))}
-        {sending && <p className="text-ink-500">Thinking…</p>}
+        {sending && <p className="text-muted">Thinking…</p>}
         <div ref={endRef} />
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
 
-      <form onSubmit={handleSubmit} className="sticky bottom-24 flex gap-2 bg-ink-50 py-2">
+      <form onSubmit={handleSubmit} className="sticky bottom-24 flex gap-2 bg-app py-2">
         <label htmlFor="assistant-input" className="sr-only">
           Your question
         </label>
@@ -126,14 +130,14 @@ export function AssistantPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Type your question"
-          className="flex-1 rounded-xl border border-ink-300 bg-white px-4 py-3 text-lg focus:border-brand-600 focus:outline-none"
+          className="flex-1 rounded-card border border-line-strong bg-surface px-4 py-3 text-lg text-text placeholder:text-subtle focus:border-accent focus:outline-none"
         />
         <Button type="submit" size="lg" loading={sending}>
           Ask
         </Button>
       </form>
 
-      <p className="pb-4 text-sm text-ink-500">
+      <p className="pb-4 text-sm text-muted">
         This assistant cannot change your exercises or give medical advice. For anything else,
         please contact your physiotherapist.
       </p>

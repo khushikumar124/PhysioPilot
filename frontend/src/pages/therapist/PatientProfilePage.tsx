@@ -11,10 +11,11 @@ import {
 import { Alert, EmptyState } from "../../components/ui/Alert";
 import { Badge, TrendBadge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
-import { Card, CardBody, CardHeader } from "../../components/ui/Card";
+import { Icon } from "../../components/ui/Icon";
+import { Panel, PanelBody, PanelHeader } from "../../components/ui/Card";
 import { ProgressChart } from "../../components/ProgressChart";
 import { FullPageSpinner, SkeletonBlock } from "../../components/ui/Spinner";
-import { Stat } from "../../components/ui/Stat";
+import { Metric, MetricStrip } from "../../components/ui/Stat";
 
 export function PatientProfilePage() {
   const { patientId } = useParams();
@@ -44,11 +45,15 @@ export function PatientProfilePage() {
       {/* --- Overview ---------------------------------------------------- */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link to="/clinic" className="text-sm text-ink-500 hover:underline">
-            ← All patients
+          <Link
+            to="/clinic"
+            className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text"
+          >
+            <Icon name="chevron-left" size="0.95rem" />
+            All patients
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-ink-900">{patient.data.name}</h1>
-          <p className="text-sm text-ink-500">
+          <h1 className="mt-1 text-2xl font-semibold text-text">{patient.data.name}</h1>
+          <p className="text-sm text-muted">
             {activePlan?.condition || "No active plan"}
             {patient.data.date_of_birth && ` · born ${formatDate(patient.data.date_of_birth)}`}
           </p>
@@ -59,54 +64,60 @@ export function PatientProfilePage() {
       </div>
 
       {patient.data.notes && (
-        <Card>
-          <CardBody className="text-sm text-ink-600">
-            <span className="font-medium text-ink-700">Clinical notes: </span>
-            {patient.data.notes}
-          </CardBody>
-        </Card>
+        <div className="flex gap-2.5 rounded-card border-l-2 border-l-accent border-y border-r border-line bg-surface px-4 py-3 text-sm">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.06em] text-subtle">
+              Clinical notes
+            </p>
+            <p className="mt-1 text-muted">{patient.data.notes}</p>
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Session adherence"
+      <MetricStrip>
+        <Metric
+          label="Adherence"
+          icon="calendar"
           value={formatPercent(adherence.data?.adherence_pct)}
           sublabel={
             adherence.data
-              ? `${adherence.data.sessions_completed} of ${adherence.data.sessions_due} sessions in ${adherence.data.window_days} days`
+              ? `${adherence.data.sessions_completed} of ${adherence.data.sessions_due} in ${adherence.data.window_days} days`
               : undefined
           }
         />
-        <Stat
+        <Metric
           label="Movement quality"
+          icon="target"
           value={formatPercent(
             performance.data?.length
               ? averageOf(performance.data.map((p) => p.quality_pct))
               : null,
           )}
-          sublabel="Camera-tracked exercises only"
+          sublabel="Camera-tracked only"
         />
-        <Stat
-          label="Current streak"
-          value={adherence.data ? `${adherence.data.current_streak_days} d` : "—"}
-          sublabel="Consecutive days with a session"
+        <Metric
+          label="Streak"
+          icon="activity"
+          value={adherence.data ? `${adherence.data.current_streak_days}d` : "—"}
+          sublabel="Consecutive days"
         />
-        <Stat
+        <Metric
           label="Latest session"
+          icon="clock"
           value={relativeDay(sessions.data?.find((s) => s.completed_at)?.completed_at ?? null)}
         />
-      </div>
+      </MetricStrip>
 
       {/* --- Current prescription ---------------------------------------- */}
-      <Card>
-        <CardHeader
+      <Panel>
+        <PanelHeader
           title="Current prescription"
           description={activePlan ? `${activePlan.title} · started ${formatDate(activePlan.start_date)}` : undefined}
           action={
             activePlan ? <Badge tone="brand">Active</Badge> : undefined
           }
         />
-        <CardBody>
+        <PanelBody>
           {plans.loading ? (
             <SkeletonBlock className="h-24" />
           ) : !activePlan ? (
@@ -120,15 +131,15 @@ export function PatientProfilePage() {
               }
             />
           ) : (
-            <ul className="divide-y divide-ink-100">
+            <ul className="divide-y divide-line">
               {activePlan.prescribed_exercises
                 .filter((item) => item.active)
                 .map((item) => (
                   <li key={item.id} className="py-3 first:pt-0 last:pb-0">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <p className="font-medium text-ink-900">{item.exercise.name}</p>
-                        <p className="text-sm text-ink-600">
+                        <p className="font-medium text-text">{item.exercise.name}</p>
+                        <p className="text-sm text-muted">
                           {item.sets} × {item.repetitions}
                           {item.frequency_per_day > 1 && `, ${item.frequency_per_day} times a day`}
                           {item.target_rom && ` · target ${formatDegrees(item.target_rom)}`}
@@ -141,22 +152,22 @@ export function PatientProfilePage() {
                       )}
                     </div>
                     {item.instructions && (
-                      <p className="mt-1 text-sm text-ink-500">“{item.instructions}”</p>
+                      <p className="mt-1 text-sm text-muted">“{item.instructions}”</p>
                     )}
                   </li>
                 ))}
             </ul>
           )}
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
 
       {/* --- Progress ---------------------------------------------------- */}
-      <Card>
-        <CardHeader
+      <Panel>
+        <PanelHeader
           title="Observed movement progress"
           description="Peak range recorded per session. Measured by camera, not a clinical assessment."
         />
-        <CardBody className="space-y-6">
+        <PanelBody className="space-y-6">
           {progress.loading ? (
             <SkeletonBlock className="h-56" />
           ) : !progress.data?.length ? (
@@ -168,13 +179,13 @@ export function PatientProfilePage() {
             progress.data.map((series) => (
               <div key={series.exercise_id}>
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-ink-800">
+                  <h3 className="text-sm font-medium text-text">
                     {series.exercise_name} — observed range
                   </h3>
                   <TrendBadge trend={series.trend} />
                 </div>
                 {series.points.length < 2 ? (
-                  <p className="text-sm text-ink-500">
+                  <p className="text-sm text-muted">
                     {series.points.length === 1
                       ? `One session recorded: ${formatDegrees(series.points[0].value)}. A trend needs more sessions.`
                       : "No sessions recorded yet."}
@@ -185,16 +196,16 @@ export function PatientProfilePage() {
               </div>
             ))
           )}
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
 
       {/* --- Exercise performance ---------------------------------------- */}
-      <Card>
-        <CardHeader
+      <Panel>
+        <PanelHeader
           title="Exercise performance"
           description="Session adherence and movement quality are recorded separately."
         />
-        <CardBody>
+        <PanelBody>
           {performance.loading ? (
             <SkeletonBlock className="h-32" />
           ) : !performance.data?.length ? (
@@ -203,7 +214,7 @@ export function PatientProfilePage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wide text-ink-500">
+                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
                     <th className="py-2 pr-4 font-medium">Exercise</th>
                     <th className="py-2 pr-4 font-medium">Sessions</th>
                     <th className="py-2 pr-4 font-medium">Reps in range</th>
@@ -215,20 +226,20 @@ export function PatientProfilePage() {
                 </thead>
                 <tbody>
                   {performance.data.map((row) => (
-                    <tr key={row.exercise_id} className="border-b border-ink-100 last:border-0">
+                    <tr key={row.exercise_id} className="border-b border-line last:border-0">
                       <td className="py-2.5 pr-4">
-                        <span className="font-medium text-ink-800">{row.exercise_name}</span>
+                        <span className="font-medium text-text">{row.exercise_name}</span>
                         {!row.cv_supported && (
-                          <span className="ml-2 text-xs text-ink-500">self-reported</span>
+                          <span className="ml-2 text-xs text-muted">self-reported</span>
                         )}
                       </td>
-                      <td className="py-2.5 pr-4 tabular-nums">{row.sessions}</td>
-                      <td className="py-2.5 pr-4 tabular-nums">
+                      <td className="py-2.5 pr-4 tnum">{row.sessions}</td>
+                      <td className="py-2.5 pr-4 tnum">
                         {row.reps_valid === null ? "—" : `${row.reps_valid} / ${row.reps_attempted}`}
                       </td>
-                      <td className="py-2.5 pr-4 tabular-nums">{formatPercent(row.quality_pct)}</td>
-                      <td className="py-2.5 pr-4 tabular-nums">{formatDegrees(row.latest_rom)}</td>
-                      <td className="py-2.5 pr-4 tabular-nums text-ink-500">
+                      <td className="py-2.5 pr-4 tnum">{formatPercent(row.quality_pct)}</td>
+                      <td className="py-2.5 pr-4 tnum">{formatDegrees(row.latest_rom)}</td>
+                      <td className="py-2.5 pr-4 tnum text-muted">
                         {formatDegrees(row.target_rom)}
                       </td>
                       <td className="py-2.5">
@@ -240,40 +251,40 @@ export function PatientProfilePage() {
               </table>
             </div>
           )}
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
 
       {/* --- Session history --------------------------------------------- */}
-      <Card>
-        <CardHeader title="Session history" description="Most recent 20 sessions." />
-        <CardBody>
+      <Panel>
+        <PanelHeader title="Session history" description="Most recent 20 sessions." />
+        <PanelBody>
           {sessions.loading ? (
             <SkeletonBlock className="h-32" />
           ) : !sessions.data?.length ? (
             <EmptyState title="No sessions yet" />
           ) : (
-            <ul className="divide-y divide-ink-100 text-sm">
+            <ul className="divide-y divide-line text-sm">
               {sessions.data.map((session) => {
                 const item = activePlan?.prescribed_exercises.find(
                   (pe) => pe.id === session.prescribed_exercise_id,
                 );
                 return (
                   <li key={session.id} className="flex flex-wrap items-center gap-3 py-2.5">
-                    <span className="w-40 text-ink-500">
+                    <span className="w-40 text-muted">
                       {formatDateTime(session.completed_at ?? session.started_at)}
                     </span>
-                    <span className="flex-1 font-medium text-ink-800">
+                    <span className="flex-1 font-medium text-text">
                       {item?.exercise.name ?? "Exercise"}
                     </span>
-                    <span className="tabular-nums text-ink-600">
+                    <span className="tnum text-muted">
                       {session.reps_attempted}/{session.reps_prescribed} reps
                     </span>
-                    <span className="tabular-nums text-ink-600">
+                    <span className="tnum text-muted">
                       {session.reps_valid === null
                         ? "not tracked"
                         : `${session.reps_valid} in range`}
                     </span>
-                    <span className="tabular-nums text-ink-600">
+                    <span className="tnum text-muted">
                       {formatDegrees(session.rom_max)}
                     </span>
                     {session.status === "completed" ? (
@@ -288,8 +299,8 @@ export function PatientProfilePage() {
               })}
             </ul>
           )}
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

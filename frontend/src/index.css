@@ -1,41 +1,129 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   PhysioPilot design tokens.
+   PhysioPilot design system
 
-   One product, two densities: the clinician dashboard is information-dense,
-   the patient app uses the same palette at a much larger scale. Colours are a
-   calm clinical teal on warm neutrals - no gradients, no neon.
+   Colour is defined once as semantic roles - surface, line, text, accent -
+   and each theme redefines those roles. Components never reference a raw
+   palette value, so light and dark stay in step automatically.
+
+   The palette is a cool clinical slate with a single deep teal accent. Colour
+   carries meaning here (a declining trend, a flagged patient); it is not
+   decoration, so the neutrals stay genuinely neutral and the accent is used
+   sparingly.
 --------------------------------------------------------------------------- */
-@theme {
-  --color-brand-50: #f0fdfa;
-  --color-brand-100: #ccfbf1;
-  --color-brand-200: #99f6e4;
-  --color-brand-300: #5eead4;
-  --color-brand-400: #2dd4bf;
-  --color-brand-500: #14b8a6;
-  --color-brand-600: #0d9488;
-  --color-brand-700: #0f766e;
-  --color-brand-800: #115e59;
-  --color-brand-900: #134e4a;
 
-  --color-ink-50: #f8fafc;
-  --color-ink-100: #f1f5f9;
-  --color-ink-200: #e2e8f0;
-  --color-ink-300: #cbd5e1;
-  --color-ink-400: #94a3b8;
-  --color-ink-500: #64748b;
-  --color-ink-600: #475569;
-  --color-ink-700: #334155;
-  --color-ink-800: #1e293b;
-  --color-ink-900: #0f172a;
+:root {
+  color-scheme: light;
 
-  --color-positive: #15803d;
-  --color-positive-soft: #dcfce7;
-  --color-caution: #b45309;
-  --color-caution-soft: #fef3c7;
-  --color-alert: #b91c1c;
-  --color-alert-soft: #fee2e2;
+  /* Surfaces, from furthest back to closest to the reader. */
+  --app-bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-sunken: #eef1f4;
+  --surface-hover: #f7f9fa;
+  --surface-inverse: #16202b;
+
+  /* Lines. `line` is structural, `line-strong` separates major regions. */
+  --line: #dfe4ea;
+  --line-strong: #c8d0d9;
+
+  /* Text, in descending emphasis. */
+  --text: #16202b;
+  --text-muted: #5b6774;
+  --text-subtle: #8a95a1;
+  --text-inverse: #ffffff;
+
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-text: #ffffff;
+  --accent-quiet: #e7f2f1;
+  --accent-line: #b7d9d5;
+
+  --positive: #1a7f42;
+  --positive-quiet: #e6f4ec;
+  --caution: #9a6212;
+  --caution-quiet: #fbf1de;
+  --alert: #b3261e;
+  --alert-quiet: #fbeae9;
+
+  --focus: #0f766e;
+  --shadow-sm: 0 1px 2px rgba(22, 32, 43, 0.06);
+  --shadow-md: 0 4px 16px rgba(22, 32, 43, 0.08);
+  --shadow-lg: 0 12px 32px rgba(22, 32, 43, 0.12);
+
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --app-bg: #0e1418;
+  --surface: #161e24;
+  --surface-sunken: #111920;
+  --surface-hover: #1d262d;
+  --surface-inverse: #e8edf1;
+
+  --line: #27333b;
+  --line-strong: #38464f;
+
+  --text: #e8edf1;
+  --text-muted: #9dabb6;
+  --text-subtle: #74838f;
+  --text-inverse: #0e1418;
+
+  /* Lifted for contrast against a dark surface; the light teal would vibrate. */
+  --accent: #4fd1c5;
+  --accent-hover: #6ee0d6;
+  --accent-text: #08191c;
+  --accent-quiet: #16302f;
+  --accent-line: #2a4b48;
+
+  --positive: #57c98a;
+  --positive-quiet: #172c20;
+  --caution: #e0b262;
+  --caution-quiet: #2e2415;
+  --alert: #f38b84;
+  --alert-quiet: #331b1a;
+
+  --focus: #4fd1c5;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* Map the semantic roles onto Tailwind utilities: bg-surface, text-muted,
+   border-line, and so on. */
+@theme inline {
+  --color-app: var(--app-bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-inverse: var(--surface-inverse);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-inverse: var(--text-inverse);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-accent-quiet: var(--accent-quiet);
+  --color-accent-line: var(--accent-line);
+
+  --color-positive: var(--positive);
+  --color-positive-quiet: var(--positive-quiet);
+  --color-caution: var(--caution);
+  --color-caution-quiet: var(--caution-quiet);
+  --color-alert: var(--alert);
+  --color-alert-quiet: var(--alert-quiet);
+
+  --radius-card: var(--radius);
+  --radius-card-lg: var(--radius-lg);
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -47,22 +135,39 @@ html {
 
 body {
   margin: 0;
-  background-color: var(--color-ink-50);
-  color: var(--color-ink-800);
+  background-color: var(--app-bg);
+  color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* Slightly tighter tracking reads as more considered at UI sizes. */
+  letter-spacing: -0.006em;
 }
 
-/* Visible focus for keyboard users everywhere, including large patient buttons. */
+/* Numbers in tables and metrics must line up column to column. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
 :focus-visible {
-  outline: 3px solid var(--color-brand-600);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* Patient-facing screens run one step larger for readability. */
+/* Patient-facing screens run one step larger throughout. */
 .patient-scale {
   font-size: 1.0625rem;
   line-height: 1.6;
+}
+
+/* Theme changes should not animate every colour on the page at once. */
+.theme-transition,
+.theme-transition * {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

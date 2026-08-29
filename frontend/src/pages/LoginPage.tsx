@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Logo } from "../components/Logo";
+import { Icon } from "../components/ui/Icon";
+import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { Alert } from "../components/ui/Alert";
 import { Button } from "../components/ui/Button";
 import { TextField } from "../components/ui/Field";
@@ -44,18 +46,24 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink-50 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-app px-4 py-10">
+      {/* The toggle lives here too: sign-in is outside both app shells, and a
+          dark-adapted user should not be forced through a bright page first. */}
+      <div className="fixed right-4 top-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <Logo size={36} />
-          <p className="mt-2 text-sm text-ink-500">From prescription to recovery.</p>
+          <p className="mt-2 text-sm text-muted">From prescription to recovery.</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-ink-200 bg-white p-6 shadow-sm"
+          className="space-y-4 rounded-card-lg border border-line bg-surface p-6"
         >
-          <h1 className="text-xl font-semibold text-ink-900">Sign in</h1>
+          <h1 className="text-xl font-semibold text-text">Sign in</h1>
 
           {error && <Alert tone="error">{error}</Alert>}
 
@@ -80,19 +88,21 @@ export function LoginPage() {
             Sign in
           </Button>
 
-          <p className="text-center text-sm text-ink-500">
+          <p className="text-center text-sm text-muted">
             Are you a physiotherapist?{" "}
-            <Link to="/register" className="font-medium text-brand-700 underline">
+            <Link to="/register" className="font-medium text-accent underline">
               Create an account
             </Link>
           </p>
         </form>
 
-        <div className="mt-4 rounded-2xl border border-dashed border-ink-300 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+        {/* Demo shortcuts sit on the page background rather than in a second
+            box beneath the form. */}
+        <div className="mt-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.07em] text-subtle">
             Demo accounts
           </p>
-          <div className="mt-2 space-y-2">
+          <div className="mt-2.5 space-y-2">
             {DEMO_ACCOUNTS.map((account) => (
               <button
                 key={account.email}
@@ -101,14 +111,17 @@ export function LoginPage() {
                   setEmail(account.email);
                   setPassword(DEMO_PASSWORD);
                 }}
-                className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-left text-sm hover:bg-ink-100"
+                className="flex w-full items-center justify-between gap-3 rounded-card border border-line bg-surface px-3.5 py-2.5 text-left text-sm transition-colors hover:border-accent-line hover:bg-surface-hover"
               >
-                <span className="font-medium text-ink-800">{account.label}</span>
-                <span className="block text-xs text-ink-500">{account.email}</span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-text">{account.label}</span>
+                  <span className="block truncate text-xs text-muted">{account.email}</span>
+                </span>
+                <Icon name="arrow-right" size="1rem" className="text-subtle" />
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-ink-400">
+          <p className="mt-2 text-xs text-subtle">
             Patients are normally created by their physiotherapist, not self-registered.
           </p>
         </div>

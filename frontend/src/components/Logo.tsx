@@ -9,7 +9,7 @@ export function Logo({ size = 28 }: { size?: number }) {
         aria-hidden="true"
         role="presentation"
       >
-        <rect width="32" height="32" rx="9" fill="var(--color-brand-700)" />
+        <rect width="32" height="32" rx="9" fill="var(--accent)" />
         <path
           d="M9 21.5c2.2-5.2 4.1-8.4 5.7-9.6 1.6-1.2 2.8-.5 3.5 2 .5 1.8 1 2.7 1.5 2.7.6 0 1.4-1.1 2.3-3.4"
           stroke="white"
@@ -18,7 +18,7 @@ export function Logo({ size = 28 }: { size?: number }) {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-lg font-semibold tracking-tight text-ink-900">PhysioPilot</span>
+      <span className="text-lg font-semibold tracking-tight text-text">PhysioPilot</span>
     </span>
   );
 }

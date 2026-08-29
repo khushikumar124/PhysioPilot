@@ -9,6 +9,8 @@ import { FullPageSpinner } from "../../components/ui/Spinner";
 import { checkFraming, type FramingResult } from "../../cv/framing";
 import { drawPose } from "../../cv/overlay";
 import { CameraError, startPoseTracking, type PoseTrackerHandles } from "../../cv/poseTracker";
+import { PositioningGuide, SessionDone } from "../../components/art/Illustrations";
+import { Icon } from "../../components/ui/Icon";
 import { RepDetector, type DetectedRep } from "../../cv/repDetector";
 import { getTracker } from "../../cv/trackers";
 import { createSpeaker, isVoiceEnabled, setVoiceEnabled } from "../../voice/speech";
@@ -255,33 +257,46 @@ export function ExerciseSessionPage() {
   const canTrack = Boolean(tracker && item.exercise.cv_supported);
 
   return (
-    <div className="patient-scale min-h-screen bg-ink-50">
+    <div className="patient-scale min-h-screen bg-app">
       <div className="mx-auto max-w-xl px-4 py-6">
         {/* ---------------- Step 1: get ready ---------------- */}
         {step === "ready" && (
           <div className="space-y-5">
             <div>
-              <p className="text-ink-500">Exercise</p>
-              <h1 className="text-3xl font-semibold text-ink-900">{item.exercise.name}</h1>
-              <p className="mt-1 text-xl text-ink-700">
+              <p className="text-muted">Exercise</p>
+              <h1 className="text-3xl font-semibold text-text">{item.exercise.name}</h1>
+              <p className="mt-1 text-xl text-text">
                 {item.sets} sets × {item.repetitions} times
               </p>
             </div>
 
-            <div className="rounded-2xl border border-ink-200 bg-white p-5">
-              <h2 className="text-xl font-semibold text-ink-900">Let's get ready</h2>
-              <p className="mt-2 text-ink-700">{item.instructions}</p>
+            <div className="border-y border-line py-5">
+              <h2 className="text-xl font-semibold text-text">Let's get ready</h2>
+              <p className="mt-2 text-text">{item.instructions}</p>
               {canTrack && (
-                <>
-                  <PhonePlacementIllustration />
-                  <ul className="mt-3 space-y-2 text-ink-700">
-                    <li>Place your phone so your whole leg can be seen.</li>
-                    <li>Sit or lie with your side facing the phone.</li>
-                    <li>Make sure the room is bright enough.</li>
-                  </ul>
-                </>
+                <figure className="mt-5">
+                  <PositioningGuide className="w-full text-text" />
+                  <figcaption className="mt-3 text-center text-base text-muted">
+                    About two metres away, with your side facing the phone
+                  </figcaption>
+                </figure>
               )}
             </div>
+
+            {canTrack && (
+              <ul className="space-y-2.5 text-text">
+                {[
+                  "Place your phone so your whole leg can be seen.",
+                  "Sit or lie with your side facing the phone.",
+                  "Make sure the room is bright enough.",
+                ].map((line) => (
+                  <li key={line} className="flex gap-2.5">
+                    <Icon name="check" className="mt-1.5 text-accent" size="1rem" strokeWidth={2.2} />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {submitError && <Alert tone="error">{submitError}</Alert>}
 
@@ -323,7 +338,7 @@ export function ExerciseSessionPage() {
             which leaves no time to wait for a conditional render first. */}
         <div className={cameraVisible ? "space-y-4" : "hidden"} aria-hidden={!cameraVisible}>
           <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-2xl bg-ink-900">
+            <div className="relative overflow-hidden rounded-card-lg border border-line bg-surface-inverse">
               <video
                 ref={videoRef}
                 className="w-full -scale-x-100"
@@ -336,17 +351,17 @@ export function ExerciseSessionPage() {
                 className="pointer-events-none absolute inset-0 h-full w-full -scale-x-100"
               />
               {step === "exercising" && (
-                <div className="absolute left-3 top-3 rounded-xl bg-white/95 px-4 py-2">
-                  <p className="text-sm text-ink-500">Repetitions</p>
-                  <p className="text-4xl font-semibold tabular-nums text-ink-900">
+                <div className="absolute left-3 top-3 rounded-xl bg-surface/95 px-4 py-2">
+                  <p className="text-sm text-muted">Repetitions</p>
+                  <p className="text-4xl font-semibold tnum text-text">
                     {repCount} / {prescribedReps}
                   </p>
                 </div>
               )}
               {step === "exercising" && liveAngle !== null && (
-                <div className="absolute right-3 top-3 rounded-xl bg-white/95 px-3 py-2 text-right">
-                  <p className="text-xs text-ink-500">Movement</p>
-                  <p className="text-2xl font-semibold tabular-nums text-ink-900">
+                <div className="absolute right-3 top-3 rounded-xl bg-surface/95 px-3 py-2 text-right">
+                  <p className="text-xs text-muted">Movement</p>
+                  <p className="text-2xl font-semibold tnum text-text">
                     {Math.round(liveAngle)}°
                   </p>
                 </div>
@@ -354,24 +369,26 @@ export function ExerciseSessionPage() {
             </div>
 
             {step === "positioning" && (
-              <div className="rounded-2xl border border-ink-200 bg-white p-5 text-center">
-                <p className="text-2xl font-medium text-ink-900">
+              <div className="py-2 text-center">
+                <p className="text-2xl font-medium text-text">
                   {framing?.message ?? "Starting the camera…"}
                 </p>
                 {framing?.ready && (
-                  <p className="mt-2 text-ink-500">Hold still for a moment…</p>
+                  <p className="mt-2 text-muted">Hold still for a moment…</p>
                 )}
               </div>
             )}
 
             {step === "exercising" && (
               <>
-                <div className="rounded-2xl border border-ink-200 bg-white p-5 text-center">
-                  <p className="text-2xl font-medium text-ink-900">
+                {/* The live cue is the most important text on the screen while
+                    exercising; a box around it only makes it smaller. */}
+                <div className="py-2 text-center">
+                  <p className="text-2xl font-medium text-text">
                     {liveFeedback || item.exercise.patient_cue}
                   </p>
                   {detectorRef.current?.currentState === "lost" && (
-                    <p className="mt-2 text-[color:var(--color-caution)]">
+                    <p className="mt-2 text-caution">
                       I cannot see you at the moment.
                     </p>
                   )}
@@ -417,16 +434,16 @@ export function ExerciseSessionPage() {
         {/* ---------------- Fallback: no camera ---------------- */}
         {step === "self_report" && (
           <div className="space-y-5">
-            <h1 className="text-3xl font-semibold text-ink-900">{item.exercise.name}</h1>
+            <h1 className="text-3xl font-semibold text-text">{item.exercise.name}</h1>
             {cameraError && (
               <Alert tone="warning" title="Camera not available">
                 {cameraError} You can still do the exercise and tell us when you finish.
               </Alert>
             )}
-            <div className="rounded-2xl border border-ink-200 bg-white p-5">
-              <p className="text-xl text-ink-800">{item.instructions}</p>
-              <p className="mt-3 text-2xl font-semibold text-ink-900">
-                {item.sets} sets × {item.repetitions} times
+            <div className="border-y border-line py-5">
+              <p className="text-xl text-text">{item.instructions}</p>
+              <p className="mt-3 text-2xl font-semibold text-text">
+                {item.sets} sets, {item.repetitions} times
               </p>
             </div>
             {submitError && <Alert tone="error">{submitError}</Alert>}
@@ -458,16 +475,16 @@ export function ExerciseSessionPage() {
         {/* ---------------- Step 8: finished ---------------- */}
         {step === "finished" && result && (
           <div className="space-y-5 text-center">
-            <p className="text-6xl" aria-hidden="true">🎉</p>
-            <h1 className="text-3xl font-semibold text-ink-900">Great job!</h1>
-            <div className="space-y-3 rounded-2xl border border-ink-200 bg-white p-5 text-left">
+            <SessionDone className="mx-auto h-24 w-24 text-accent" />
+            <h1 className="text-3xl font-semibold text-text">Great job!</h1>
+            <div className="space-y-3 border-y border-line py-5 text-left">
               {result.patient_summary.map((line) => (
-                <p key={line} className="text-xl text-ink-800">
+                <p key={line} className="text-xl text-text">
                   {line}
                 </p>
               ))}
               {result.rom_max !== null && (
-                <p className="text-ink-500">
+                <p className="text-muted">
                   Your best movement today was {Math.round(result.rom_max)} degrees.
                 </p>
               )}
@@ -482,47 +499,18 @@ export function ExerciseSessionPage() {
   );
 }
 
-/** Simple, non-decorative illustration of where to put the phone. */
-function PhonePlacementIllustration() {
-  return (
-    <figure className="mt-4">
-      <svg
-        viewBox="0 0 260 100"
-        className="w-full rounded-xl bg-ink-100"
-        role="img"
-        aria-label="A phone placed about two metres away, with the patient's side facing it"
-      >
-        <rect x="18" y="24" width="26" height="46" rx="5" fill="var(--color-ink-800)" />
-        <rect x="21" y="28" width="20" height="38" rx="3" fill="var(--color-brand-300)" />
-        <path d="M48 47 L92 47" stroke="var(--color-ink-400)" strokeWidth="2" strokeDasharray="5 5" />
-        <circle cx="150" cy="26" r="11" fill="var(--color-ink-700)" />
-        <path
-          d="M150 37 L150 62 L178 74 M150 62 L124 76"
-          stroke="var(--color-ink-700)"
-          strokeWidth="6"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </svg>
-      <figcaption className="mt-2 text-center text-base text-ink-500">
-        About 2 metres away, with your side facing the phone
-      </figcaption>
-    </figure>
-  );
-}
-
 /** A single, wordless progress bar: how far this repetition has travelled. */
 function RangeBar({ value, target }: { value: number | null; target: number }) {
   const pct = value === null ? 0 : Math.min(100, Math.max(0, (value / target) * 100));
   return (
     <div>
-      <div className="h-6 w-full overflow-hidden rounded-full bg-ink-200">
+      <div className="h-6 w-full overflow-hidden rounded-full bg-surface-sunken">
         <div
-          className="h-full rounded-full bg-brand-600 transition-[width] duration-100"
+          className="h-full rounded-full bg-accent transition-[width] duration-100"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-1 text-center text-sm text-ink-500">
+      <p className="mt-1 text-center text-sm text-muted">
         The bar fills as you move further.
       </p>
     </div>

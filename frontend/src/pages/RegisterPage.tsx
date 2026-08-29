@@ -42,16 +42,16 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink-50 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-app px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <Logo size={36} />
         </div>
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-ink-200 bg-white p-6 shadow-sm"
+          className="space-y-4 rounded-card-lg border border-line bg-surface p-6"
         >
-          <h1 className="text-xl font-semibold text-ink-900">Create a physiotherapist account</h1>
+          <h1 className="text-xl font-semibold text-text">Create a physiotherapist account</h1>
           {error && <Alert tone="error">{error}</Alert>}
           <TextField label="Full name" required value={form.name} onChange={update("name")} />
           <TextField
@@ -75,9 +75,9 @@ export function RegisterPage() {
           <Button type="submit" size="lg" loading={submitting} className="w-full">
             Create account
           </Button>
-          <p className="text-center text-sm text-ink-500">
+          <p className="text-center text-sm text-muted">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-brand-700 underline">
+            <Link to="/login" className="font-medium text-accent underline">
               Sign in
             </Link>
           </p>

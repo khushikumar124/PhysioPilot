@@ -6,7 +6,7 @@ import { useAsync } from "../../lib/useAsync";
 import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
-import { Card, CardBody, CardHeader } from "../../components/ui/Card";
+import { Panel, PanelBody, PanelHeader } from "../../components/ui/Card";
 import { SelectField, TextAreaField, TextField } from "../../components/ui/Field";
 import { FullPageSpinner } from "../../components/ui/Spinner";
 
@@ -160,11 +160,11 @@ export function PrescriptionBuilderPage() {
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold text-ink-900">
+        <h1 className="text-2xl font-semibold text-text">
           {activePlan ? "Edit rehabilitation plan" : "Create rehabilitation plan"}
         </h1>
-        <p className="text-sm text-ink-500">
-          Patient: <span className="font-medium text-ink-700">{patient.data?.name}</span>
+        <p className="text-sm text-muted">
+          Patient: <span className="font-medium text-text">{patient.data?.name}</span>
         </p>
       </div>
 
@@ -176,9 +176,9 @@ export function PrescriptionBuilderPage() {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader title="Plan" />
-        <CardBody className="space-y-4">
+      <Panel>
+        <PanelHeader title="Plan" />
+        <PanelBody className="space-y-4">
           <TextField
             label="Plan title"
             required
@@ -208,17 +208,17 @@ export function PrescriptionBuilderPage() {
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
 
-      <Card>
-        <CardHeader
+      <Panel>
+        <PanelHeader
           title="Prescribed exercises"
           description="The patient sees exactly these, in this order."
         />
-        <CardBody className="space-y-4">
+        <PanelBody className="space-y-4">
           {items.length === 0 && (
-            <p className="rounded-xl border border-dashed border-ink-300 px-4 py-6 text-center text-sm text-ink-500">
+            <p className="rounded-card border border-dashed border-line px-4 py-8 text-center text-sm text-muted">
               No exercises added yet.
             </p>
           )}
@@ -226,10 +226,10 @@ export function PrescriptionBuilderPage() {
           {items.map((item, index) => {
             const exercise = exercisesById.get(item.exercise_id);
             return (
-              <div key={item.key} className="rounded-xl border border-ink-200 p-4">
+              <div key={item.key} className="rounded-card border border-line bg-surface-sunken p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-medium text-ink-900">
+                    <p className="font-medium text-text">
                       {index + 1}. {exercise?.name ?? "Exercise"}
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -238,7 +238,7 @@ export function PrescriptionBuilderPage() {
                       ) : (
                         <Badge tone="neutral">Self-reported</Badge>
                       )}
-                      <span className="text-xs text-ink-500">{exercise?.description}</span>
+                      <span className="text-xs text-muted">{exercise?.description}</span>
                     </div>
                   </div>
                   <Button
@@ -294,7 +294,7 @@ export function PrescriptionBuilderPage() {
                       }
                     />
                   ) : (
-                    <div className="text-xs text-ink-500 sm:pt-8">
+                    <div className="text-xs text-muted sm:pt-8">
                       Not camera tracked — the patient confirms completion themselves.
                     </div>
                   )}
@@ -313,8 +313,8 @@ export function PrescriptionBuilderPage() {
           })}
 
           {available.length > 0 && (
-            <div className="rounded-xl bg-ink-50 p-4">
-              <p className="mb-2 text-sm font-medium text-ink-700">Add an exercise</p>
+            <div className="rounded-card border border-line bg-surface-sunken p-4">
+              <p className="mb-2 text-sm font-medium text-text">Add an exercise</p>
               <div className="flex flex-wrap gap-2">
                 {available.map((exercise) => (
                   <Button
@@ -326,15 +326,15 @@ export function PrescriptionBuilderPage() {
                   >
                     + {exercise.name}
                     {exercise.cv_supported && (
-                      <span className="text-xs text-brand-700">· tracked</span>
+                      <span className="text-xs text-accent">· tracked</span>
                     )}
                   </Button>
                 ))}
               </div>
             </div>
           )}
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" size="lg" loading={saving}>

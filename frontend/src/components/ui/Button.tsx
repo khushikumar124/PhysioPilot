@@ -11,19 +11,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-700 text-white hover:bg-brand-800 border-brand-700",
-  secondary: "bg-white text-ink-800 hover:bg-ink-100 border-ink-300",
-  ghost: "bg-transparent text-ink-600 hover:bg-ink-100 border-transparent",
-  danger: "bg-white text-[color:var(--color-alert)] hover:bg-[color:var(--color-alert-soft)] border-[color:var(--color-alert)]",
+  primary: "bg-accent text-accent-text hover:bg-accent-hover border-transparent",
+  secondary: "bg-surface text-text hover:bg-surface-hover border-line-strong",
+  ghost: "bg-transparent text-muted hover:bg-surface-hover hover:text-text border-transparent",
+  danger: "bg-surface text-alert hover:bg-alert-quiet border-alert",
 };
 
 // `xl` is the patient-app size: large enough to hit reliably on a phone held
 // at arm's length.
 const SIZES: Record<Size, string> = {
-  sm: "text-sm px-3 py-1.5 rounded-lg",
-  md: "text-sm px-4 py-2.5 rounded-lg",
-  lg: "text-base px-5 py-3 rounded-xl",
-  xl: "text-2xl px-8 py-5 rounded-2xl font-semibold",
+  sm: "text-[0.8125rem] px-3 py-1.5 rounded-card",
+  md: "text-sm px-4 py-2 rounded-card",
+  lg: "text-base px-5 py-3 rounded-card",
+  xl: "text-2xl px-8 py-5 rounded-card-lg font-semibold",
 };
 
 export function Button({

@@ -12,6 +12,22 @@
     />
   </head>
   <body>
+    <script>
+      // Set the theme before the first paint. Without this a dark-mode user
+      // gets a full-brightness flash on every load.
+      (function () {
+        try {
+          var stored = localStorage.getItem("physiopilot.theme");
+          var dark =
+            stored === "dark" ||
+            ((!stored || stored === "system") &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

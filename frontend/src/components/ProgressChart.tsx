@@ -43,17 +43,17 @@ export function ProgressChart({
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: -12 }}>
-          <CartesianGrid stroke="var(--color-ink-200)" vertical={false} />
+          <CartesianGrid stroke="var(--line)" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 11, fill: "var(--color-ink-500)" }}
+            tick={{ fontSize: 11, fill: "var(--text-muted)" }}
             tickLine={false}
-            axisLine={{ stroke: "var(--color-ink-200)" }}
+            axisLine={{ stroke: "var(--line)" }}
             minTickGap={24}
           />
           <YAxis
             domain={[Math.max(0, Math.floor(lower - 10)), Math.ceil(upper + 10)]}
-            tick={{ fontSize: 11, fill: "var(--color-ink-500)" }}
+            tick={{ fontSize: 11, fill: "var(--text-muted)" }}
             tickLine={false}
             axisLine={false}
             width={44}
@@ -61,21 +61,29 @@ export function ProgressChart({
           />
           <Tooltip
             formatter={(value) => [`${value}°`, "Observed range"] as [string, string]}
+            // Recharts defaults the tooltip to a white box, which is unreadable
+            // on a dark surface; every colour has to be stated explicitly.
             contentStyle={{
-              borderRadius: 12,
-              border: "1px solid var(--color-ink-200)",
+              borderRadius: 10,
+              border: "1px solid var(--line)",
+              background: "var(--surface)",
+              color: "var(--text)",
+              boxShadow: "var(--shadow-md)",
               fontSize: 12,
             }}
+            labelStyle={{ color: "var(--text-muted)" }}
+            itemStyle={{ color: "var(--text)" }}
+            cursor={{ stroke: "var(--line-strong)" }}
           />
           {targetRom ? (
             <ReferenceLine
               y={targetRom}
-              stroke="var(--color-ink-400)"
+              stroke="var(--text-subtle)"
               strokeDasharray="4 4"
               label={{
                 value: `Prescribed ${Math.round(targetRom)}°`,
                 position: "insideTopRight",
-                fill: "var(--color-ink-500)",
+                fill: "var(--text-muted)",
                 fontSize: 11,
               }}
             />
@@ -83,9 +91,9 @@ export function ProgressChart({
           <Line
             type="monotone"
             dataKey="value"
-            stroke="var(--color-brand-700)"
+            stroke="var(--accent)"
             strokeWidth={2.5}
-            dot={{ r: 3, fill: "var(--color-brand-700)", strokeWidth: 0 }}
+            dot={{ r: 3, fill: "var(--accent)", strokeWidth: 0 }}
             activeDot={{ r: 5 }}
             isAnimationActive={false}
           />

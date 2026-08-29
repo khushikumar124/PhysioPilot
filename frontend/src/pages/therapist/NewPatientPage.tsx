@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
-import { Card, CardBody, CardHeader } from "../../components/ui/Card";
+import { Panel, PanelBody, PanelHeader } from "../../components/ui/Card";
 import { TextAreaField, TextField } from "../../components/ui/Field";
 
 /**
@@ -56,13 +56,13 @@ export function NewPatientPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold text-ink-900">Add a patient</h1>
-      <Card>
-        <CardHeader
+      <h1 className="text-2xl font-semibold text-text">Add a patient</h1>
+      <Panel>
+        <PanelHeader
           title="Patient details"
           description="This creates the patient's sign-in for the PhysioPilot app."
         />
-        <CardBody>
+        <PanelBody>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <Alert tone="error">{error}</Alert>}
             <TextField label="Full name" required value={form.name} onChange={update("name")} />
@@ -106,8 +106,8 @@ export function NewPatientPage() {
               </Button>
             </div>
           </form>
-        </CardBody>
-      </Card>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }
