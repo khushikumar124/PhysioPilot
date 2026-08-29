@@ -13,9 +13,20 @@ _is_sqlite = settings.database_url.startswith("sqlite")
 
 _connect_args = {"check_same_thread": False} if _is_sqlite else {}
 
-# A hosted database drops idle connections; pre-ping so a stale one is replaced
-# rather than surfacing as an error on the first request after a quiet spell.
-_engine_kwargs = {} if _is_sqlite else {"pool_pre_ping": True, "pool_recycle": 300}
+if _is_sqlite:
+    _engine_kwargs: dict = {}
+elif settings.is_serverless:
+    # Serverless invocations are short-lived and many run at once. Holding a
+    # pool per instance exhausts a small Postgres connection limit quickly, so
+    # each request opens and closes its own connection and the provider's
+    # pooled connection string does the real pooling.
+    from sqlalchemy.pool import NullPool
+
+    _engine_kwargs = {"poolclass": NullPool}
+else:
+    # A hosted database drops idle connections; pre-ping so a stale one is
+    # replaced rather than failing the first request after a quiet spell.
+    _engine_kwargs = {"pool_pre_ping": True, "pool_recycle": 300}
 
 engine = create_engine(
     settings.sqlalchemy_url, connect_args=_connect_args, future=True, **_engine_kwargs

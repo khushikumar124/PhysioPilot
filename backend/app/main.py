@@ -24,6 +24,12 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             "PHYSIOPILOT_SECRET_KEY is unset and a development default is in use. "
             "Set it before running anywhere other than your own machine."
         )
+    if not settings.should_run_startup_tasks:
+        # Serverless: the schema is applied once by `python -m app.deploy`
+        # rather than on every cold start.
+        yield
+        return
+
     Base.metadata.create_all(bind=engine)
     ensure_schema()
     with SessionLocal() as db:

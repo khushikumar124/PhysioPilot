@@ -1,5 +1,6 @@
 """Application configuration, loaded from environment / .env file."""
 
+import os
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,11 +24,26 @@ class Settings(BaseSettings):
     # Seed the demo clinic on startup when the database has no users yet.
     # Intended for a fresh demo deployment; it never overwrites existing data.
     seed_demo_on_startup: bool = False
+    # Create tables and sync the catalogue on startup. Right for a long-running
+    # process; wrong for serverless, where startup happens on every cold start
+    # and would add database round-trips to a user's first request. Defaults
+    # off when running on Vercel - schema there is applied by `app.deploy`.
+    run_startup_tasks: bool | None = None
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     # Optional LLM backing for the assistant. Empty => deterministic fallback.
     anthropic_api_key: str = ""
     assistant_model: str = "claude-sonnet-5"
+
+    @property
+    def is_serverless(self) -> bool:
+        return bool(os.environ.get("VERCEL"))
+
+    @property
+    def should_run_startup_tasks(self) -> bool:
+        if self.run_startup_tasks is not None:
+            return self.run_startup_tasks
+        return not self.is_serverless
 
     @property
     def sqlalchemy_url(self) -> str:

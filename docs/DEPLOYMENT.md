@@ -1,109 +1,121 @@
 # Deployment
 
-The frontend and the API are deployed separately:
+Everything runs as **one Vercel project**, using
+[Vercel Services](https://vercel.com/docs/services) to build the React app and
+the FastAPI API separately while serving them from one domain.
 
-| Part | Host | Why |
-| --- | --- | --- |
-| React app | Vercel | Static build on a CDN, and HTTPS by default — which the camera requires |
-| FastAPI + Postgres | Render | A process that stays warm, and a database that persists |
+```
+vercel.json
+  services.web  -> frontend/   (Vite build, served as static files)
+  services.api  -> backend/    (FastAPI, entrypoint app.main:app)
 
-## Why not the API on Vercel too
+  /api/*  -> api service
+  /*      -> web service
+```
 
-Vercel functions have an ephemeral filesystem, so a SQLite file cannot survive
-there — the database would reset on cold starts, and a patient's completed
-session would vanish before the clinician saw it. Postgres solves that, but the
-1–3 second cold start remains, and it lands on whichever click comes first.
+Because both are on the same origin there is **no CORS to configure** — the
+single most common way this kind of deployment goes wrong simply does not
+apply. The frontend calls `/api/...` relatively, exactly as it does locally.
 
-For a live demo, a warm process is worth the second platform.
+The database is Postgres, added from the Vercel Marketplace (Neon has a free
+tier).
 
----
+## 1. Create the database
 
-## 1. API on Render
+1. Vercel dashboard → **Storage** → **Create Database** → **Neon** (Postgres).
+2. Connect it to your project. Vercel injects `DATABASE_URL` and friends.
+3. Copy the **pooled** connection string. Use the pooled one — serverless opens
+   many short-lived connections, and the direct string will exhaust the
+   connection limit under any real use.
 
-Render reads `render.yaml` at the repo root, which declares the web service and
-a Postgres database together.
+## 2. Prepare the schema
 
-1. Render dashboard → **New** → **Blueprint** → select this repository.
-2. Approve the plan. It creates `physiopilot-api` and `physiopilot-db`, and
-   wires `PHYSIOPILOT_DATABASE_URL` from the database automatically.
-3. Leave `PHYSIOPILOT_CORS_ORIGINS` blank for now — you do not have the Vercel
-   URL yet. Deploy, and note the API URL, e.g.
-   `https://physiopilot-api.onrender.com`.
-4. Check `https://<api-url>/api/health` returns `{"status":"ok"}`.
+Serverless functions must not do schema work on every cold start, so this is
+run once, deliberately, from your machine against the remote database:
 
-`PHYSIOPILOT_SECRET_KEY` is generated once by Render. **Do not regenerate it**
-— every existing session is signed with it and would be invalidated.
+```bash
+cd backend
+PHYSIOPILOT_DATABASE_URL="<pooled connection string>" \
+  .venv/bin/python -m app.deploy --seed-demo
+```
 
-`PHYSIOPILOT_SEED_DEMO_ON_STARTUP` is `true` in the blueprint, so the demo
-clinic is created on first boot. It only runs when the database has no users,
-so redeploys leave your data alone. Set it to `false` once real data exists.
+This creates the tables, applies column migrations, syncs the exercise
+catalogue, and seeds the demo clinic. Re-run it (without `--seed-demo`) after
+any change that adds a column.
 
-## 2. Frontend on Vercel
+## 3. Deploy
 
 1. Vercel → **Add New** → **Project** → import this repository.
-2. Leave the framework preset as-is; `vercel.json` supplies the build settings.
-3. Add an environment variable:
+2. Leave the build settings alone — `vercel.json` defines both services.
+3. Set environment variables (Project → Settings → Environment Variables):
 
    | Name | Value |
    | --- | --- |
-   | `VITE_API_BASE_URL` | your Render API URL, no trailing slash |
+   | `PHYSIOPILOT_DATABASE_URL` | the pooled Postgres connection string |
+   | `PHYSIOPILOT_SECRET_KEY` | a long random string — see below |
 
-4. Deploy, and note the Vercel URL.
+   Generate a key with:
 
-The install command runs `scripts/fetch-cv-assets.sh`, which downloads the pose
-model and copies the wasm runtime. These are not in git — without that step the
-app deploys but the camera never starts.
+   ```bash
+   python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+   ```
 
-## 3. Connect the two
+   Keep it. Changing it invalidates every existing session.
 
-Back in Render, set `PHYSIOPILOT_CORS_ORIGINS` to your Vercel URL and redeploy:
+4. Deploy.
 
-```
-https://physiopilot.vercel.app
-```
+`VITE_API_BASE_URL` is **not** needed: same origin, so relative requests work.
+`PHYSIOPILOT_CORS_ORIGINS` is not needed either, for the same reason.
 
-No trailing slash. Comma-separate several (a preview URL, a custom domain).
-Until this is set the browser blocks every API call, and the app will look
-broken while the API is perfectly healthy.
+Optionally set `PHYSIOPILOT_ANTHROPIC_API_KEY` to enable the LLM-backed
+assistant. Without it the assistant falls back to its deterministic responder
+and still answers every question the product promises.
 
 ## Checks after deploying
 
-1. `GET /api/health` returns ok.
-2. Sign in as `ananya.rao@physiopilot.demo` / `physio123` — proves CORS, the
-   database, and seeding all work.
-3. Open the patient app on a **phone** and start a camera session. This is the
-   thing local development cannot test: it needs the HTTPS that Vercel gives
-   you.
-4. Complete a session as the patient, then reload the clinician dashboard and
-   confirm the session count moved.
+1. `https://<your-app>.vercel.app/api/health` returns `{"status":"ok"}`.
+2. Sign in as `ananya.rao@physiopilot.demo` / `physio123` — this proves the
+   database, the routing, and the seeding all work together.
+3. Open the patient app **on a phone** and start a camera session. This is the
+   thing local development cannot test: it needs the HTTPS Vercel provides.
+4. Complete a session as the patient, reload the clinician dashboard, and check
+   the session count moved.
 
-## Known limits of the free tiers
+## Things worth knowing
 
-**Render free web services sleep after inactivity**, and the next request takes
-around 50 seconds to wake the service. Before presenting, open the API URL a
-minute beforehand so it is awake. If the demo matters, the paid instance
-removes this entirely and is the single best money you can spend here.
+**Cold starts.** An idle function takes roughly a second or two to wake, and it
+lands on whichever request comes first. Before presenting, load the site once so
+the function is warm. This is far shorter than a sleeping container elsewhere,
+but it is not zero.
 
-**Render free Postgres expires after 90 days.** Note the date you created it.
+**The Hobby plan is for non-commercial use.** A student prototype and a demo sit
+comfortably inside that. If PhysioPilot starts earning money, the plan needs to
+change — worth knowing now rather than later.
 
-The pose model is 5.5 MB and the wasm runtime is larger; both are cached with
-long-lived immutable headers, so only the first camera session on a device
-pays that cost.
+**The CV assets are not in git.** `frontend/scripts/fetch-cv-assets.mjs` runs as
+the frontend's `prebuild`, so Vercel fetches them automatically. Without that
+step the app would deploy looking fine and the camera would silently never
+start.
+
+**Function bundle size.** The API bundle is small (FastAPI, SQLAlchemy, psycopg,
+bcrypt), well inside the limit. The 39 MB of pose assets belong to the web
+service and are served as static files, not bundled into the function.
 
 ## Environment variables
 
-### API (Render)
+| Variable | Where | Required | Notes |
+| --- | --- | --- | --- |
+| `PHYSIOPILOT_DATABASE_URL` | Vercel | yes | Pooled Postgres string. `postgres://` is normalised automatically |
+| `PHYSIOPILOT_SECRET_KEY` | Vercel | yes | Long random string. Changing it signs everyone out |
+| `PHYSIOPILOT_ANTHROPIC_API_KEY` | Vercel | no | Enables the LLM assistant |
+| `PHYSIOPILOT_ACCESS_TOKEN_EXPIRE_MINUTES` | Vercel | no | Defaults to 720 |
+| `PHYSIOPILOT_RUN_STARTUP_TASKS` | Vercel | no | Auto-detected off on Vercel; only set it to override |
 
-| Variable | Required | Notes |
-| --- | --- | --- |
-| `PHYSIOPILOT_DATABASE_URL` | yes | Wired from the database by the blueprint. `postgres://` is normalised automatically |
-| `PHYSIOPILOT_SECRET_KEY` | yes | Generated once. Changing it signs everyone out |
-| `PHYSIOPILOT_CORS_ORIGINS` | yes | The Vercel URL. Nothing works without it |
-| `PHYSIOPILOT_SEED_DEMO_ON_STARTUP` | no | `true` creates the demo clinic on an empty database |
-| `PHYSIOPILOT_ANTHROPIC_API_KEY` | no | Enables the LLM assistant; without it the deterministic responder is used |
+## Local development is unchanged
 
-### Frontend (Vercel)
+```bash
+./scripts/dev.sh
+```
 
-| Variable | Required | Notes |
-| --- | --- | --- |
-| `VITE_API_BASE_URL` | yes | Render API origin, no trailing slash. Empty locally so Vite proxies instead |
+SQLite, both servers, Vite proxying `/api` to the backend. None of the above
+affects it.
