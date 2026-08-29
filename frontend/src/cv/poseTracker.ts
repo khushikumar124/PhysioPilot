@@ -101,13 +101,12 @@ export async function startPoseTracking(
     throw new CameraError("no_camera", CAMERA_ERROR_MESSAGES.no_camera);
   }
 
-  let landmarker: PoseLandmarker;
-  try {
-    landmarker = await loadLandmarker();
-  } catch {
-    throw new CameraError("model_failed", CAMERA_ERROR_MESSAGES.model_failed);
-  }
-
+  // Ask for the camera FIRST, while the user's tap on START is still counted
+  // as an active gesture. Safari only honours getUserMedia inside that window,
+  // and loading the model beforehand (a 5.5 MB download on first run) spends
+  // it - the call is then rejected with NotAllowedError and no prompt is ever
+  // shown. Requesting first also puts the permission dialog in front of the
+  // patient immediately instead of after a silent wait.
   let stream: MediaStream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -126,6 +125,16 @@ export async function startPoseTracking(
       throw new CameraError("no_camera", CAMERA_ERROR_MESSAGES.no_camera);
     }
     throw new CameraError("unknown", CAMERA_ERROR_MESSAGES.unknown);
+  }
+
+  let landmarker: PoseLandmarker;
+  try {
+    landmarker = await loadLandmarker();
+  } catch {
+    // Release the camera we just acquired, or its light stays on with nothing
+    // reading from it.
+    stream.getTracks().forEach((track) => track.stop());
+    throw new CameraError("model_failed", CAMERA_ERROR_MESSAGES.model_failed);
   }
 
   video.srcObject = stream;

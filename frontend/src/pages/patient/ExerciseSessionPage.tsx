@@ -184,24 +184,20 @@ export function ExerciseSessionPage() {
     [finishSession, prescribedReps, speaker, targetRom, tracker],
   );
 
+  const cameraVisible = step === "positioning" || step === "exercising";
+
   async function beginTrackedSession() {
     if (!item) return;
     setCameraError(null);
-    try {
-      const session = await api.startSession(item.prescribed_exercise_id);
-      setSessionId(session.id);
-      sessionIdRef.current = session.id;
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Could not start the session.");
-      return;
-    }
-
     detectorRef.current = new RepDetector({ targetRom });
     readyFramesRef.current = 0;
     setRepCount(0);
     setStep("positioning");
-    speaker.speak("Place your phone so your whole leg is visible.", { interrupt: true });
 
+    // The camera is requested before anything is awaited, so the browser still
+    // sees this as happening inside the user's tap. Creating the session over
+    // the network first would spend that gesture and Safari would refuse the
+    // camera without ever prompting.
     try {
       handlesRef.current = await startPoseTracking(videoRef.current!, handleFrame);
     } catch (error) {
@@ -211,6 +207,22 @@ export function ExerciseSessionPage() {
           : "The camera could not be started. Please try again.";
       setCameraError(message);
       setStep("self_report");
+      return;
+    }
+
+    speaker.speak("Place your phone so your whole leg is visible.", { interrupt: true });
+
+    // Only now record the attempt. If this fails there is nothing to track
+    // into, so release the camera rather than leaving it running.
+    try {
+      const session = await api.startSession(item.prescribed_exercise_id);
+      setSessionId(session.id);
+      sessionIdRef.current = session.id;
+    } catch (error) {
+      handlesRef.current?.stop();
+      handlesRef.current = null;
+      setSubmitError(error instanceof Error ? error.message : "Could not start the session.");
+      setStep("ready");
     }
   }
 
@@ -305,8 +317,11 @@ export function ExerciseSessionPage() {
           </div>
         )}
 
-        {/* ---------------- Steps 2-6: camera ---------------- */}
-        {(step === "positioning" || step === "exercising") && (
+        {/* ---------------- Steps 2-6: camera ----------------
+            The camera surface stays mounted even when hidden. getUserMedia has
+            to be called while the tap on START still counts as a user gesture,
+            which leaves no time to wait for a conditional render first. */}
+        <div className={cameraVisible ? "space-y-4" : "hidden"} aria-hidden={!cameraVisible}>
           <div className="space-y-4">
             <div className="relative overflow-hidden rounded-2xl bg-ink-900">
               <video
@@ -397,7 +412,7 @@ export function ExerciseSessionPage() {
               </Button>
             </div>
           </div>
-        )}
+        </div>
 
         {/* ---------------- Fallback: no camera ---------------- */}
         {step === "self_report" && (
