@@ -1,0 +1,26 @@
+# Python
+backend/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local database (recreate with: python -m app.seed --reset)
+backend/*.db
+
+# Secrets
+.env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Node
+node_modules/
+frontend/dist/
+
+# Pose model and wasm runtime (~39 MB). Fetched by scripts/fetch-cv-assets.sh.
+frontend/public/mediapipe/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
